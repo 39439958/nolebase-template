@@ -1,134 +1,215 @@
 
 
-# 腾讯高频351总结
-
-
+# 算法高频面试题总结
 
 ## 链表
 
 **链表相关题目的常用操作就是设置虚拟头结点，递归解决，快慢指针（判环，找中点）**
 
-### 876. 链表的中间结点
 
-思路：快慢指针
-
+![](./链表题目导图.jpg)
 
 
-### 142、环形链表2
+### 链表题目总结
 
-思路：需要一点数学计算，最终结论是快慢指针相遇时，再启动一个新指针从头和slow一起走，当它们相遇时，该节点即为环入口
+**1.反转链表**
+
+**2.反转链表2**：在给定left~right内反转链表
+
+**3.两两交换链表的节点**：递归写法：返回入口(head或者head->next为空返回head)，获取三个节点（head,head->next,head->next->next），node1的next为反转后的node3，node2的next为node1，返回node2即可
 
 ```cpp
-class Solution {
-public:
-    ListNode *detectCycle(ListNode *head) {
-        ListNode *slow = head, *fast = head;
-        while (fast != nullptr && fast->next != nullptr) {
-            fast = fast->next->next;
-            slow = slow->next;
-            if (fast == slow) {
-                ListNode *p = head;
-                while (p != slow) {
-                    p = p->next;
-                    slow = slow->next;
-                }
-                return p;
-            }
-        }
-        return nullptr;
+ListNode *swapPairs(ListNode *head) {
+        if (head == nullptr || head->next == nullptr)
+            return head;
+
+        auto node1 = head;
+        auto node2 = head->next;
+        auto node3 = node2->next;
+
+        node1->next = swapPairs(node3); // 1 指向递归返回的链表头
+        node2->next = node1; // 2 指向 1
+
+        return node2; // 返回交换后的链表头节点
     }
-};
 ```
 
-
-
-### 160、相交链表/LCR171
-
-为什么下面这样不行？
+迭代法：
 
 ```cpp
-while (pa != pb) {
-    pa = pa->next;
-    if (pa == nullptr) pa = headB;
-    pb = pb->next;
-    if (pb == nullptr) pb = headA;
+ListNode *swapPairs(ListNode *head) {
+        auto dummy = new ListNode(0, head); // 用哨兵节点简化代码逻辑
+        auto node0 = dummy;
+        auto node1 = head;
+        while (node1 && node1->next) { // 至少有两个节点
+            auto node2 = node1->next;
+            auto node3 = node2->next;
+
+            node0->next = node2; // 0 -> 2
+            node2->next = node1; // 2 -> 1
+            node1->next = node3; // 1 -> 3
+
+            node0 = node1; // 下一轮交换，0 是 1
+            node1 = node3; // 下一轮交换，1 是 3
+        }
+        return dummy->next; // 返回新链表的头节点
+    }
+```
+
+**4.K个一组反转链表**：判断是否够k个，够的话，反转k个，然后递归反转后面的（处理好反转完两个k段之间的关系）
+
+```cpp
+preHead->next->next = reverseKGroup(cur, k);
+return pre;
+```
+
+**5.旋转链表**：先将k对链表长度取模，然后找到倒数第k+1个节点和尾节点，然后调整三个节点（head，rear，cur）的关系即可
+
+**6.奇偶链表**：先将偶数节点分离出来，然后再接到奇数节点的尾部
+
+```cpp
+// 分离奇偶节点
+ListNode *evenPreHead = new ListNode(-1);
+ListNode *cur = head;
+ListNode *evenCur = evenPreHead;
+while (cur != nullptr && cur->next != nullptr) {
+    evenCur->next = cur->next;
+    evenCur = evenCur->next;
+    cur->next = cur->next->next;
+    cur = cur->next;
+}
+evenCur->next = nullptr;
+```
+
+**7.重排链表**：先快慢指针找中点分离后半段，再反转后半段，最后合并两段
+
+```cpp
+// 交叉合并两段链表
+ListNode *p = head, *q = rightHead;
+while (p != nullptr && q != nullptr) {
+    ListNode *nep = p->next;
+    p->next = q;
+    p = nep;
+    ListNode *neq = q->next;
+    q->next = nep;
+    q = neq;
+}	
+```
+
+**8.链表的中间节点**
+
+**9.回文链表**：快慢指针找中点进行分割，反转后半段链表，然后对比数值
+
+**10.两数相加1**：记住简化版的代码，迭代方式创建新节点更方便，递归方式可使用原节点，最好用迭代方式
+
+```cpp
+ListNode *preHead = new ListNode(0);
+auto *cur = preHead;
+int carry = 0;
+while (carry || l1 || l2) {
+    int cursum = (l1 ? l1->val : 0) + (l2 ? l2->val : 0) + carry;
+    cur->next = new ListNode(cursum % 10);
+    cur = cur->next;
+    carry = cursum / 10;
+    if (l1) l1 = l1->next;
+    if (l2) l2 = l2->next;
 }
 ```
 
-因为如果链表不相交时，这样会陷入死循环，因为无法让pa=pb=nullptr的情况出现，这样情况即为不相交
+**11.两数相加2**：两数相加1结合反转链表
+
+**12.合并两个有序链表**
+
+**13.合并k个有序链表**：使用优先队列
+
+**14.环形链表**：快慢指针判断是否有环
+
+**15.环形链表2**：快慢指针后，再添1个慢指针与原来慢指针相遇即为入口点
+
+**16.相交链表**：两个指针从两个起点往后遍历，遍历到底再从对方的起点开始遍历，相遇时即为交点，如果两者为空，说明没相遇，所以我们需要代码中判断两者都为空的情况出现
+
+```cpp
+while (pa != pb) {
+    if (pa == nullptr) pa = headB;
+    else pa = pa->next;
+    if (pb == nullptr) pb = headA;
+    else pb = pb->next;
+}
+```
+
+**17.链表中倒数第k个节点**：两个指针一起遍历，一个先走k步，然后再一起走（举一反三：找倒数第k-1，可以使先走指针的下一节点不为空）
+
+**18.删除链表中的倒数第k个节点**：找倒数第k+1个
+
+**19.删除链表中的重复元素**
+
+**20.删除链表中的重复元素2**：使用bool值have_same记录是否有重复，cur指针遍历当前需要判断的值，pre指针用于当重复元素出现需要删除它们时使用
+
+**21.排序链表（归并排序**）：递归入口、归（快慢指针找中点分割链表）、并（合并两个升序链表）
+
+**22.链表的插入排序**：n轮遍历，保存上一次的最大值指针premax和当前遍历的指针cur，如果当前值为最大值，调整premax=cur，如果不是，则调整premax->next
+
+**23.复制带随机指针的链表**：递归写，用哈希表维护已深拷贝的节点
+
+
+
+
+
+#### 206、反转链表
 
 ```cpp
 class Solution {
 public:
-    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
-        ListNode *pa = headA, *pb = headB;
-        while (pa != pb) {
-            if (pa == nullptr) pa = headB;
-            else pa = pa->next;
-            if (pb == nullptr) pb = headA;
-            else pb = pb->next;
+    ListNode* reverseList(ListNode* head) {
+        if (head == nullptr) return head;
+        ListNode *preHead = new ListNode(-1);
+        preHead->next = head;
+        ListNode *cur = head, *pre = preHead;
+        while (cur != nullptr) {
+            ListNode *tmp = cur;
+            cur = cur->next;
+            tmp->next = pre;
+            pre = tmp;
         }
-        return pa;
+        preHead->next->next = nullptr;
+        return pre;
     }
 };
 ```
 
-
-
-### 19、删除链表的倒数第N个节点
-
-### LCR140、返回链表倒数第N个节点
-
-这题是19题的简易版本，删除链表中的一个节点需要遍历到它的前一个节点，所以19题需要一个虚拟头结点来简化代码和思路。
-
-
-
-### 83、删除链表中的重复元素（保留一个）
-
-### 82、删除链表中的重复元素2（只要是重复的元素，全部删除）
-
-思路：新建一个虚拟头结点
-
-遍历过程中记录pre节点，cur节点，cur->next == nullptr表示当前只剩一个元素，所以不需要再判断了；
-
-对于每一个cur，新建一个p指针，遍历后面的元素，同时记录have_same表示是否有重复，有重复时需要将
-
-`pre->next = p;cur = p;`，无重复时，继续向后遍历即可
+#### 92、反转链表2
 
 ```cpp
 class Solution {
 public:
-    ListNode* deleteDuplicates(ListNode* head) {
-        if (head == nullptr || head->next == nullptr) return head;
-        ListNode *preHead = new ListNode(-1, head);
+    ListNode* reverseBetween(ListNode* head, int left, int right) {
+        ListNode *preHead = new ListNode(-1);
+        preHead->next = head;
 
-        ListNode *pre = preHead, *cur = head;
-        while (cur != nullptr && cur->next != nullptr) {
-            ListNode *p = cur->next;
-            bool have_same = false;
-            while (p != nullptr && p->val == cur->val) {
-                have_same = true;
-                p = p->next;
-            }
-            if (have_same) {
-                pre->next = p;
-                cur = p;
-            } else {
-                cur = cur->next;
-                pre = pre->next;
-            }
-            
+        ListNode *pre = preHead;
+        ListNode *cur = head;
+        int cnt = 1;
+        while (cnt != left && cur != nullptr) {
+            pre = pre->next;
+            cur = cur->next;
+            cnt++;
         }
+        ListNode *preleft = pre;
+        while (cnt <= right && cur != nullptr) {
+            ListNode *ne = cur->next;
+            cur->next = pre;
+            pre = cur;
+            cur = ne;
+            cnt++;
+        }
+        preleft->next->next = cur;
+        preleft->next = pre;
         return preHead->next;
     }
 };
 ```
 
-
-
-
-
-### 24、两两交换链表中的节点
+#### 24、两两交换链表中的节点
 
 递归：
 
@@ -178,7 +259,7 @@ public:
 };
 ```
 
-### 25、K个一组翻转链表
+#### 25、K个一组翻转链表
 
 思路：使用递归写法，先遍历判断是否有k个元素，不足k个则为递归出口，返回head即可，如果够k个，则对这k个进行链表翻转，然后递归的翻转后面的链表，最后这两步要记住`preHead->next->next = reverseKGroup(cur, k);	return pre;`，
 
@@ -209,33 +290,398 @@ public:
 };
 ```
 
-### 138、随机链表的复制
+#### 61、旋转链表
 
-思路：用哈希表来存储旧节点和新拷贝的节点，用来表示该节点是否深拷贝过，如果深拷贝过，直接用哈希表返回即可，没有深拷贝过则拷贝这个节点，并设置它的两个指针。
+思路：
+
+首先将k对len取模，当k == 0时直接返回，链表只有0/1个节点也直接返回；
+
+找到链表的倒数第k + 1个节点，将cur指向它，将rear指向链表尾元素
+
+然后开始调整位置，记得设置`cur->next = nullptr;`
 
 ```cpp
 class Solution {
 public:
-    unordered_map<Node*, Node*> cache_node;
+    ListNode* rotateRight(ListNode* head, int k) {
+        if (head == nullptr || head->next == nullptr) return head;
+        // k > len时取模
+        int len = 0;
+        ListNode *p = head;
+        while (p != nullptr) {
+            p = p->next;
+            len++;
+        }
+        k %= len;
+        if (k == 0) return head;
 
-    Node* copyRandomList(Node* head) {
-        if (head == nullptr) return head;
-        
-        if (cache_node.count(head) == 0) {
-            Node* head_copy = new Node(head->val);
-            cache_node[head] = head_copy;
-            if (head->next) head_copy->next = copyRandomList(head->next);
-            if (head->random) head_copy->random = copyRandomList(head->random);
+        // 找到倒数第k+1个节点
+        ListNode *rear = head, *cur = head;
+        while (k--) rear = rear->next;
+        while (rear->next != nullptr) {
+            rear = rear->next;
+            cur = cur->next;
         }
 
-        return cache_node[head];
+        // 调整位置
+        ListNode *tmp = head;
+        head = cur->next;
+        cur->next = nullptr;
+        rear->next = tmp;
+
+        return head;
+    }
+};
+```
+
+#### [328. 奇偶链表](https://leetcode.cn/problems/odd-even-linked-list/)
+
+```cpp
+class Solution {
+public:
+    ListNode* oddEvenList(ListNode* head) {
+        if (head == nullptr) return head;
+        ListNode *evenPreHead = new ListNode(-1);
+
+        ListNode *cur = head;
+        ListNode *evenCur = evenPreHead;
+        while (cur != nullptr && cur->next != nullptr) {
+            evenCur->next = cur->next;
+            evenCur = evenCur->next;
+            cur->next = cur->next->next;
+            cur = cur->next;
+        }
+        evenCur->next = nullptr;
+
+        ListNode *oddRear = head;
+        while (oddRear->next != nullptr) {
+            oddRear = oddRear->next;
+        }
+
+        oddRear->next = evenPreHead->next;
+
+        return head;
+    }
+};
+```
+
+#### [143. 重排链表](https://leetcode.cn/problems/reorder-list/)
+
+```cpp
+class Solution {
+public:
+    void reorderList(ListNode* head) {
+        if (head->next == nullptr || head->next->next == nullptr) return;
+        
+        // 快慢指针找中点，分离出后半段链表
+        ListNode *slow = head, *fast = head->next;
+        while (fast != nullptr && fast->next != nullptr) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        ListNode *rightHead = slow->next;
+        slow->next = nullptr;
+
+        // 反转后半段链表
+        ListNode *preHead = new ListNode(-1, rightHead);
+        ListNode *cur = rightHead, *pre = preHead;
+        while (cur != nullptr) {
+            ListNode *ne = cur->next;
+            cur->next = pre;
+            pre = cur;
+            cur = ne;
+        }
+        rightHead->next = nullptr;
+        rightHead = pre;
+
+        // 重排成新链表
+        ListNode *p = head, *q = rightHead;
+        while (p != nullptr && q != nullptr) {
+            ListNode *nep = p->next;
+            p->next = q;
+            p = nep;
+            ListNode *neq = q->next;
+            q->next = nep;
+            q = neq;
+        }
     }
 };
 ```
 
 
 
-### 147、链表插入排序
+#### 876. 链表的中间结点
+
+思路：快慢指针
+
+
+
+#### [234. 回文链表](https://leetcode.cn/problems/palindrome-linked-list/)
+
+```cpp
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {
+        if (head->next == nullptr) return true;
+        ListNode *slow = head, *fast = head->next;
+        while (fast != nullptr && fast->next != nullptr) {
+            slow = slow->next;
+            fast = fast->next->next;
+        }
+        ListNode *right_list = slow->next;
+        slow->next = nullptr;
+
+        ListNode *preHead = new ListNode(-1);
+        preHead->next = right_list;
+        ListNode *cur = right_list, *pre = preHead;
+        while (cur != nullptr) {
+            ListNode *tmp = cur;
+            cur = cur->next;
+            tmp->next = pre;
+            pre = tmp;
+        }
+        right_list->next = nullptr;
+
+        right_list = pre;
+        ListNode *left_list = head;
+        while (right_list != nullptr) {
+            if (right_list->val != left_list->val) return false;
+            right_list = right_list->next;
+            left_list = left_list->next;
+        }
+        return true;
+    }
+};
+```
+
+#### [2. 两数相加](https://leetcode.cn/problems/add-two-numbers/)
+
+```cpp
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2, int carry = 0) {
+        if (l1 == nullptr && l2 == nullptr) {
+            return carry ? new ListNode(carry) : nullptr;
+        }
+        if (l1 == nullptr) {
+            swap(l1, l2);
+        }
+        carry += (l1->val + (l2 ? l2->val : 0));
+        l1->val = carry % 10;
+        l1->next = addTwoNumbers(l1->next, (l2 ? l2->next : nullptr), carry / 10);
+        return l1;
+    }
+};
+```
+
+#### [445. 两数相加 II](https://leetcode.cn/problems/add-two-numbers-ii/)
+
+```cpp
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        l1 = reverse(l1);
+        l2 = reverse(l2);
+
+        ListNode *preHead = new ListNode(0);
+        auto *cur = preHead;
+        int carry = 0;
+        while (carry || l1 || l2) {
+            int cursum = (l1 ? l1->val : 0) + (l2 ? l2->val : 0) + carry;
+            cur->next = new ListNode(cursum % 10);
+            cur = cur->next;
+            carry = cursum / 10;
+            if (l1) l1 = l1->next;
+            if (l2) l2 = l2->next;
+        }
+
+        return reverse(preHead->next);
+    }
+
+    ListNode* reverse(ListNode *head) {
+        if (head->next == nullptr) return head;
+
+        ListNode *preHead = new ListNode(-1, head);
+        ListNode *cur = head, *pre = preHead;
+        while (cur != nullptr) {
+            ListNode *ne = cur->next;
+            cur->next = pre;
+            pre = cur;
+            cur = ne;
+        }
+        head->next = nullptr;
+
+        return pre;
+    }
+};
+```
+
+#### [21. 合并两个有序链表](https://leetcode.cn/problems/merge-two-sorted-lists/)
+
+```cpp
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* l1, ListNode* l2) {
+        ListNode *preHead = new ListNode(-1);
+
+        ListNode *pre = preHead;
+        while (l1 != nullptr && l2 != nullptr) {
+            if (l1->val <= l2->val) {
+                pre->next = l1;
+                l1 = l1->next;
+            } else {
+                pre->next = l2;
+                l2 = l2->next;
+            }
+            pre = pre->next;
+        }
+        if (l1 != nullptr) pre->next = l1;
+        if (l2 != nullptr) pre->next = l2;
+        return preHead->next;
+    }
+};
+```
+
+#### [23. 合并 K 个升序链表](https://leetcode.cn/problems/merge-k-sorted-lists/)
+
+```cpp
+class Solution {
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        // 创建小顶堆
+        auto cmp = [](const ListNode *a, const ListNode *b) {
+            return a->val > b->val;
+        };
+        priority_queue<ListNode*, vector<ListNode *>, decltype(cmp)> q(cmp);
+
+        // 初始化小顶堆
+        int n = lists.size();
+        for (int i = 0; i < n; ++i) {
+            if (lists[i] != nullptr) q.push(lists[i]);
+        }
+
+        // 合并链表
+        ListNode *preHead = new ListNode(-1);
+        ListNode *cur = preHead;
+        while (!q.empty()) {
+            auto t = q.top();
+            cur->next = t;
+            q.pop();
+            if (t->next != nullptr) {
+                q.push(t->next);
+            }
+            cur = cur->next;
+        }
+        return preHead->next;
+    }
+};
+```
+
+#### 142、环形链表2
+
+思路：需要一点数学计算，最终结论是快慢指针相遇时，再启动一个新指针从头和slow一起走，当它们相遇时，该节点即为环入口
+
+```cpp
+class Solution {
+public:
+    ListNode *detectCycle(ListNode *head) {
+        ListNode *slow = head, *fast = head;
+        while (fast != nullptr && fast->next != nullptr) {
+            fast = fast->next->next;
+            slow = slow->next;
+            if (fast == slow) {
+                ListNode *p = head;
+                while (p != slow) {
+                    p = p->next;
+                    slow = slow->next;
+                }
+                return p;
+            }
+        }
+        return nullptr;
+    }
+};
+```
+
+#### 160、相交链表/LCR171
+
+为什么下面这样不行？
+
+```cpp
+while (pa != pb) {
+    pa = pa->next;
+    if (pa == nullptr) pa = headB;
+    pb = pb->next;
+    if (pb == nullptr) pb = headA;
+}
+```
+
+因为如果链表不相交时，这样会陷入死循环，因为无法让pa=pb=nullptr的情况出现，这样情况即为不相交
+
+```cpp
+class Solution {
+public:
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+        ListNode *pa = headA, *pb = headB;
+        while (pa != pb) {
+            if (pa == nullptr) pa = headB;
+            else pa = pa->next;
+            if (pb == nullptr) pb = headA;
+            else pb = pb->next;
+        }
+        return pa;
+    }
+};
+```
+
+#### 19、删除链表的倒数第N个节点
+
+#### LCR140、返回链表倒数第N个节点
+
+这题是19题的简易版本，删除链表中的一个节点需要遍历到它的前一个节点，所以19题需要一个虚拟头结点来简化代码和思路。
+
+#### 83、删除链表中的重复元素（保留一个）
+
+#### 82、删除链表中的重复元素2（只要是重复的元素，全部删除）
+
+思路：新建一个虚拟头结点
+
+遍历过程中记录pre节点，cur节点，cur->next == nullptr表示当前只剩一个元素，所以不需要再判断了；
+
+对于每一个cur，新建一个p指针，遍历后面的元素，同时记录have_same表示是否有重复，有重复时需要将
+
+`pre->next = p;cur = p;`，无重复时，继续向后遍历即可
+
+```cpp
+class Solution {
+public:
+    ListNode* deleteDuplicates(ListNode* head) {
+        if (head == nullptr || head->next == nullptr) return head;
+        ListNode *preHead = new ListNode(-1, head);
+
+        ListNode *pre = preHead, *cur = head;
+        while (cur != nullptr && cur->next != nullptr) {
+            ListNode *p = cur->next;
+            bool have_same = false;
+            while (p != nullptr && p->val == cur->val) {
+                have_same = true;
+                p = p->next;
+            }
+            if (have_same) {
+                pre->next = p;
+                cur = p;
+            } else {
+                cur = cur->next;
+                pre = pre->next;
+            }
+            
+        }
+        return preHead->next;
+    }
+};
+```
+
+#### 147、链表插入排序
 
 思路：
 
@@ -280,7 +726,7 @@ public:
 };
 ```
 
-### 148、链表归并排序
+#### 148、链表归并排序
 
 ```cpp
 class Solution {
@@ -322,269 +768,33 @@ public:
 
 
 
-### 206、反转链表1
+#### 138、随机链表的复制
+
+思路：用哈希表来存储旧节点和新拷贝的节点，用来表示该节点是否深拷贝过，如果深拷贝过，直接用哈希表返回即可，没有深拷贝过则拷贝这个节点，并设置它的两个指针。
 
 ```cpp
 class Solution {
 public:
-    ListNode* reverseList(ListNode* head) {
+    unordered_map<Node*, Node*> cache_node;
+
+    Node* copyRandomList(Node* head) {
         if (head == nullptr) return head;
-        ListNode *preHead = new ListNode(-1);
-        preHead->next = head;
-        ListNode *cur = head, *pre = preHead;
-        while (cur != nullptr) {
-            ListNode *tmp = cur;
-            cur = cur->next;
-            tmp->next = pre;
-            pre = tmp;
-        }
-        preHead->next->next = nullptr;
-        return pre;
-    }
-};
-```
-
-### 92、反转链表2
-
-```cpp
-class Solution {
-public:
-    ListNode* reverseBetween(ListNode* head, int left, int right) {
-        ListNode *preHead = new ListNode(-1);
-        preHead->next = head;
-
-        ListNode *pre = preHead;
-        ListNode *cur = head;
-        int cnt = 1;
-        while (cnt != left && cur != nullptr) {
-            pre = pre->next;
-            cur = cur->next;
-            cnt++;
-        }
-        ListNode *preleft = pre;
-        while (cnt <= right && cur != nullptr) {
-            ListNode *ne = cur->next;
-            cur->next = pre;
-            pre = cur;
-            cur = ne;
-            cnt++;
-        }
-        preleft->next->next = cur;
-        preleft->next = pre;
-        return preHead->next;
-    }
-};
-```
-
-### 61、旋转链表
-
-思路：
-
-首先将k对len取模，当k == 0时直接返回，链表只有0/1个节点也直接返回；
-
-找到链表的倒数第k + 1个节点，将cur指向它，将rear指向链表尾元素
-
-然后开始调整位置，记得设置`cur->next = nullptr;`
-
-```cpp
-class Solution {
-public:
-    ListNode* rotateRight(ListNode* head, int k) {
-        if (head == nullptr || head->next == nullptr) return head;
-        // k > len时取模
-        int len = 0;
-        ListNode *p = head;
-        while (p != nullptr) {
-            p = p->next;
-            len++;
-        }
-        k %= len;
-        if (k == 0) return head;
-
-        // 找到倒数第k+1个节点
-        ListNode *rear = head, *cur = head;
-        while (k--) rear = rear->next;
-        while (rear->next != nullptr) {
-            rear = rear->next;
-            cur = cur->next;
+        
+        if (cache_node.count(head) == 0) {
+            Node* head_copy = new Node(head->val);
+            cache_node[head] = head_copy;
+            if (head->next) head_copy->next = copyRandomList(head->next);
+            if (head->random) head_copy->random = copyRandomList(head->random);
         }
 
-        // 调整位置
-        ListNode *tmp = head;
-        head = cur->next;
-        cur->next = nullptr;
-        rear->next = tmp;
-
-        return head;
+        return cache_node[head];
     }
 };
 ```
 
 
 
-### 链表题目总结
 
-复习时间：
-
-- [x] 7.11
-- [ ] 7.12
-- [ ] 7.14
-- [ ] 7.18
-- [ ] 7.26
-- [ ] 8.10
-
-**反转链表**
-
-**反转链表2**：在给定left~right内反转链表
-
-**两两交换链表的节点**：递归写法：返回入口(head或者head->next为空返回head)，获取三个节点（head,head->next,head->next->next），node1的next为反转后的node3，node2的next为node1，返回node2即可
-
-```cpp
-ListNode *swapPairs(ListNode *head) {
-        if (head == nullptr || head->next == nullptr)
-            return head;
-
-        auto node1 = head;
-        auto node2 = head->next;
-        auto node3 = node2->next;
-
-        node1->next = swapPairs(node3); // 1 指向递归返回的链表头
-        node2->next = node1; // 2 指向 1
-
-        return node2; // 返回交换后的链表头节点
-    }
-```
-
-迭代法：
-
-```cpp
-ListNode *swapPairs(ListNode *head) {
-        auto dummy = new ListNode(0, head); // 用哨兵节点简化代码逻辑
-        auto node0 = dummy;
-        auto node1 = head;
-        while (node1 && node1->next) { // 至少有两个节点
-            auto node2 = node1->next;
-            auto node3 = node2->next;
-
-            node0->next = node2; // 0 -> 2
-            node2->next = node1; // 2 -> 1
-            node1->next = node3; // 1 -> 3
-
-            node0 = node1; // 下一轮交换，0 是 1
-            node1 = node3; // 下一轮交换，1 是 3
-        }
-        return dummy->next; // 返回新链表的头节点
-    }
-```
-
-**K个一组反转链表**：判断是否够k个，够的话，反转k个，然后递归反转后面的（处理好反转完两个k段之间的关系）
-
-```cpp
-preHead->next->next = reverseKGroup(cur, k);
-return pre;
-```
-
-**旋转链表**：先将k对链表长度取模，然后找到倒数第k+1个节点和尾节点，然后调整三个节点（head，rear，cur）的关系即可
-
-**奇偶链表**：先将偶数节点分离出来，然后再接到奇数节点的尾部
-
-```cpp
-// 分离奇偶节点
-ListNode *evenPreHead = new ListNode(-1);
-ListNode *cur = head;
-ListNode *evenCur = evenPreHead;
-while (cur != nullptr && cur->next != nullptr) {
-    evenCur->next = cur->next;
-    evenCur = evenCur->next;
-    cur->next = cur->next->next;
-    cur = cur->next;
-}
-evenCur->next = nullptr;
-```
-
-**重排链表**：先快慢指针找中点分离后半段，再反转后半段，最后合并两段
-
-```cpp
-// 交叉合并两段链表
-ListNode *p = head, *q = rightHead;
-while (p != nullptr && q != nullptr) {
-    ListNode *nep = p->next;
-    p->next = q;
-    p = nep;
-    ListNode *neq = q->next;
-    q->next = nep;
-    q = neq;
-}	
-```
-
-
-
-**链表的中间节点**
-
-**回文链表**：快慢指针找中点进行分割，反转后半段链表，然后对比数值
-
-
-
-**两数相加1**：记住简化版的代码，迭代方式创建新节点更方便，递归方式可使用原节点，最好用迭代方式
-
-```cpp
-ListNode *preHead = new ListNode(0);
-auto *cur = preHead;
-int carry = 0;
-while (carry || l1 || l2) {
-    int cursum = (l1 ? l1->val : 0) + (l2 ? l2->val : 0) + carry;
-    cur->next = new ListNode(cursum % 10);
-    cur = cur->next;
-    carry = cursum / 10;
-    if (l1) l1 = l1->next;
-    if (l2) l2 = l2->next;
-}
-```
-
-**两数相加2**：两数相加1结合反转链表
-
-**合并两个有序链表**
-
-**合并k个有序链表**：使用优先队列
-
-
-
-**环形链表**：快慢指针判断是否有环
-
-**环形链表2**：快慢指针后，再添1个慢指针与原来慢指针相遇即为入口点
-
-**相交链表**：两个指针从两个起点往后遍历，遍历到底再从对方的起点开始遍历，相遇时即为交点，如果两者为空，说明没相遇，所以我们需要代码中判断两者都为空的情况出现
-
-```cpp
-while (pa != pb) {
-    if (pa == nullptr) pa = headB;
-    else pa = pa->next;
-    if (pb == nullptr) pb = headA;
-    else pb = pb->next;
-}
-```
-
-
-
-**链表中倒数第k个节点**：两个指针一起遍历，一个先走k步，然后再一起走（举一反三：找倒数第k-1，可以使先走指针的下一节点不为空）
-
-**删除链表中的倒数第k个节点**：找倒数第k+1个
-
-
-
-**删除链表中的重复元素**
-
-**删除链表中的重复元素2**：使用bool值have_same记录是否有重复，cur指针遍历当前需要判断的值，pre指针用于当重复元素出现需要删除它们时使用
-
-
-
-**排序链表（归并排序**）：递归入口、归（快慢指针找中点分割链表）、并（合并两个升序链表）
-
-**链表的插入排序**：n轮遍历，保存上一次的最大值指针premax和当前遍历的指针cur，如果当前值为最大值，调整premax=cur，如果不是，则调整premax->next
-
-
-
-**复制带随机指针的链表**：递归写，用哈希表维护已深拷贝的节点
 
 
 
@@ -1264,13 +1474,172 @@ public:
 
 ## 数据结构
 
+### 哈希表
 
 
 
 
 
+### 优先队列TOPK
 
-## 小技巧
+使用STL定义优先队列
+
+```cpp
+// 默认大顶堆
+std::priority_queue<int> pq;
+
+
+// 使用greater<int>创建一个最小堆
+std::priority_queue<int, std::vector<int>, std::greater<int>> minHeap;
+
+
+// 自定义比较函数（使用默认类型和自定义类型）
+struct CustomCompare {
+    bool operator()(const int& lhs, const int& rhs) {
+        // 自定义比较逻辑
+        // 返回true表示lhs的优先级低于rhs
+        return lhs > rhs; // 这里实现的是一个最小堆
+    }
+};
+std::priority_queue<int, std::vector<int>, CustomCompare> customPq;
+
+
+// 使用lambda表达式
+auto compare = [](int lhs, int rhs) {
+    return lhs > rhs; // 实现一个最小堆
+};
+    
+std::priority_queue<int, std::vector<int>, decltype(compare)> minHeap(compare);
+
+```
+
+#### [215. 数组中的第K个最大元素](https://leetcode.cn/problems/kth-largest-element-in-an-array/)
+
+```cpp
+class Solution {
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        priority_queue<int> q;
+        for (auto num : nums) {
+            q.push(num);
+        }
+        int res = 0;
+        while (k--) {
+            res = q.top();
+            q.pop();
+        }
+        return res;
+    }
+};
+```
+
+使用STL库的堆相对简单，但这题也是面试常考的点，考察自实现堆或者使用快速选择算法，接下来我们分别实现一下这两种。
+
+自实现堆
+
+```cpp
+class my_queue {
+    private:
+        vector<int> vec_;
+
+        void down(int n) {
+            int left = 0, right = 0, largest = 0;
+            while (1) {
+                left = 2 * n + 1;
+                right = 2 * n + 2;
+                largest = n;
+
+                if (left < vec_.size() && vec_[left] > vec_[largest]) {
+                    largest = left;
+                }
+                if (right < vec_.size() && vec_[right] > vec_[largest]) {
+                    largest = right;
+                }
+
+                if (largest == n) {
+                    break;
+                }
+                swap(vec_[n], vec_[largest]);
+                n = largest;
+            } 
+        }
+
+        void up(int n) {
+            while (1) {
+                int parent = (n - 1) / 2;
+                if (vec_[parent] >= vec_[n]) {
+                    break;
+                } 
+                swap(vec_[n], vec_[parent]);
+                n = parent;
+            }
+        }
+    public:
+        void pop() {
+            vec_[0] = vec_.back();
+            vec_.pop_back();
+            down(0);
+        }
+
+        void push(int val) {
+            vec_.push_back(val);
+            up(vec_.size() - 1);
+        } 
+
+        int top() {
+            return vec_[0];
+        }
+    };
+```
+
+快速选择算法：思路和注意点都是快速排序的思想，不过会在每轮舍弃掉一边的数
+
+```cpp
+class Solution {
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        return qselect(nums, 0, nums.size() - 1, k);
+    }
+
+    int qselect(vector<int>& nums, int l, int r, int k) {
+        if (l == r) return nums[l];
+
+        int i = l - 1, j = r + 1;
+        int x = nums[(l + r) >> 1];
+        while (i < j) {
+            do i++; while (nums[i] > x);
+            do j--; while (nums[j] < x);
+            if (i < j) swap(nums[i], nums[j]);
+        }
+        if (j - l + 1 >= k) return qselect(nums, l, j, k);
+        else return qselect(nums, j + 1, r, k - (j - l + 1));  
+    }
+};
+```
+
+
+
+### 单调栈
+
+
+
+
+
+### 单调队列
+
+
+
+
+
+### 线段树
+
+
+
+
+
+## 小算法或技巧
+
+### 二分查找
 
 
 
@@ -1321,6 +1690,39 @@ public:
 
 
 ### 快速排序
+
+```cpp
+class Solution {
+public:
+    vector<int> sortArray(vector<int>& nums) {
+        qsort(nums, 0, nums.size() - 1);
+        return nums;
+    }
+
+    void qsort(vector<int>& nums, int l, int r) {
+        if (l == r) return;
+
+        int i = l - 1, j = r + 1;
+        int x = nums[l + r + 1 >> 1];
+        while (i < j) {
+            do i++; while (nums[i] < x);
+            do j--; while (nums[j] > x);
+            if (i < j) swap(nums[i], nums[j]);
+        }
+
+        qsort(nums, l, i - 1);
+        qsort(nums, i, r);
+    }
+};
+```
+
+注意点：快排容易写错的地方在于中间值x选择时是`l+r+1>>1`还是`l+r>>1`，这里的选择对应了下面的划分是用`l,i-1 和 i,r`还是`l, j和 j+1,r`
+
+用2-3个元素的数组分析一下可以容易的得到结果，这里我们可以记住对应的关系就行了。
+
+`l + r + 1 >> 1    :     (l, i-1)   (i,r)`
+
+`l + r >> 1       :     (l, j) (j + 1, r)`
 
 
 
